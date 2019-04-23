@@ -8,28 +8,37 @@ import (
 )
 
 /*
-	管理消息处理函数映射
+	管理消息处理函数映射 cmd => func
 */
+type handlerFunc func(packet packet.IPacket)
+
+// MsgHandler 消息处理
 type MsgHandler struct {
-	handlers       map[uint16][]func(packet packet.IPacket)
+	handlers       map[uint16][]handlerFunc
 	recvBuffer     *safelist.SafeList
 	defaultHandler func(packet packet.IPacket)
 }
 
+// NewMsgHandler 创建
 func NewMsgHandler() *MsgHandler {
 	m := &MsgHandler{
 		recvBuffer: safelist.NewSafeList(),
-		handlers:   make(map[uint16][]func(packet packet.IPacket)),
+		handlers:   make(map[uint16][]handlerFunc),
 	}
 	return m
 }
-func (msgHandler *MsgHandler) SetDefaultHandler(f func(packet packet.IPacket)) {
+
+// SetDefaultHandler 设置默认消息处理函数
+func (msgHandler *MsgHandler) SetDefaultHandler(f handlerFunc) {
 	msgHandler.defaultHandler = f
 }
-func (msgHandler *MsgHandler) AttachHandler(cmd uint16, f func(packet packet.IPacket)) {
+
+// AttachHandler 添加消息映射函数
+func (msgHandler *MsgHandler) AttachHandler(cmd uint16, f handlerFunc) {
 	msgHandler.handlers[cmd] = append(msgHandler.handlers[cmd], f)
 }
 
+// DoConsumeMsg 处理消息逻辑
 func (msgHandler *MsgHandler) DoConsumeMsg() {
 	for {
 		info, err := msgHandler.recvBuffer.Pop()
@@ -51,6 +60,7 @@ func (msgHandler *MsgHandler) DoConsumeMsg() {
 	}
 }
 
+// Receive 接受消息
 func (msgHandler *MsgHandler) Receive(packet packet.IPacket) {
 	msgHandler.recvBuffer.Put(packet)
 }

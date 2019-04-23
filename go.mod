@@ -15,6 +15,10 @@ require (
 	github.com/hashicorp/serf v0.8.2 // indirect
 	github.com/jondot/goweight v1.0.4 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
-	golang.org/x/net v0.0.0-20190320064053-1272bf9dcd53
+	golang.org/x/crypto v0.0.0-20190418165655-df01cb2cc480 // indirect
+	golang.org/x/lint v0.0.0-20190409202823-959b441ac422 // indirect
+	golang.org/x/net v0.0.0-20190419010253-1f3472d942ba
+	golang.org/x/sys v0.0.0-20190418153312-f0ce4c0180be // indirect
+	golang.org/x/tools v0.0.0-20190418235243-4796d4bd3df0 // indirect
 	gopkg.in/yaml.v2 v2.2.2
 )

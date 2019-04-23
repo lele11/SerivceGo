@@ -44,8 +44,8 @@ func GetServiceList(serviceName string) []*ServiceDesc {
 	return getServicePoolMgr().GetAllList(serviceName)
 }
 
-// GetServiceById 获取某个服务信息
-func GetServiceById(serviceName string, serviceID string) *ServiceDesc {
+// GetServiceByID 获取某个服务信息
+func GetServiceByID(serviceName string, serviceID string) *ServiceDesc {
 	return getServicePoolMgr().GetService(serviceName, serviceID, "")
 }
 

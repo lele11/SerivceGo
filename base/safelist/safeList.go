@@ -7,14 +7,14 @@ import (
 	"unsafe"
 )
 
-// SafeListNode 节点
-type SafeListNode struct {
+// Node 节点
+type Node struct {
 	next  unsafe.Pointer
 	value interface{}
 }
 
 func newNode(data interface{}) unsafe.Pointer {
-	return unsafe.Pointer(&SafeListNode{
+	return unsafe.Pointer(&Node{
 		nil,
 		data,
 	})
@@ -46,12 +46,12 @@ func (sl *SafeList) Put(data interface{}) {
 
 	for {
 		tail = sl.tail
-		next := (*SafeListNode)(tail).next
+		next := (*Node)(tail).next
 
 		if next != nil {
 			atomic.CompareAndSwapPointer(&sl.tail, tail, next)
 		} else {
-			if atomic.CompareAndSwapPointer(&(*SafeListNode)(sl.tail).next, nil, newNode) {
+			if atomic.CompareAndSwapPointer(&(*Node)(sl.tail).next, nil, newNode) {
 				break
 			}
 		}
@@ -74,7 +74,7 @@ func (sl *SafeList) Pop() (interface{}, error) {
 		head := sl.head
 		tail := sl.tail
 
-		next := (*SafeListNode)(head).next
+		next := (*Node)(head).next
 
 		if head == tail {
 			if next == nil {
@@ -83,7 +83,7 @@ func (sl *SafeList) Pop() (interface{}, error) {
 			atomic.CompareAndSwapPointer(&sl.tail, tail, next)
 		} else {
 			if atomic.CompareAndSwapPointer(&sl.head, head, next) {
-				return (*SafeListNode)(next).value, nil
+				return (*Node)(next).value, nil
 			}
 		}
 
@@ -97,7 +97,7 @@ func (sl *SafeList) IsEmpty() bool {
 	head := sl.head
 	tail := sl.tail
 
-	next := (*SafeListNode)(head).next
+	next := (*Node)(head).next
 	if head == tail {
 		if next == nil {
 			return true

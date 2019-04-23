@@ -140,19 +140,19 @@ func IntToString(i int) string {
 	return strconv.FormatInt(int64(i), 10)
 }
 
-//进行四舍五入，保留n位小数
+// RoundFloat 进行四舍五入，保留n位小数
 func RoundFloat(f float64, n int) float64 {
-	pow10_n := math.Pow10(n)
-	return math.Trunc((f+0.5/pow10_n)*pow10_n) / pow10_n
+	pow10n := math.Pow10(n)
+	return math.Trunc((f+0.5/pow10n)*pow10n) / pow10n
 }
 
-//不进行四舍五入，保留n位小数
+// NoRoundFloat 不进行四舍五入，保留n位小数
 func NoRoundFloat(f float64, n int) float64 {
-	pow10_n := math.Pow10(n)
-	return math.Trunc(f*pow10_n) / pow10_n
+	pow10n := math.Pow10(n)
+	return math.Trunc(f*pow10n) / pow10n
 }
 
-//[]uint32转化为[]byte
+// Uint32sToBytes []uint32转化为[]byte
 func Uint32sToBytes(args []uint32) []byte {
 	bytes := make([]byte, 0)
 	for _, arg := range args {
@@ -163,7 +163,7 @@ func Uint32sToBytes(args []uint32) []byte {
 	return bytes
 }
 
-//[]byte转化为[]uint32
+// BytesToUint32s []byte转化为[]uint32
 func BytesToUint32s(bytes []byte) []uint32 {
 	res := make([]uint32, 0)
 	for i := 0; i < len(bytes)/4; i++ {
@@ -272,6 +272,7 @@ func StringToMapKUint32VF32(str, sep1, sep2 string) map[uint32]float32 {
 	return res
 }
 
+// GetFreePort 随机可以使用的端口
 func GetFreePort() (port int, err error) {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {

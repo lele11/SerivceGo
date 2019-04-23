@@ -46,7 +46,7 @@ type Service struct {
 	network.NetServer      //网络服务器Server
 	network.NetClient
 	*logger.RemoteLog                        //日志记录
-	sessionMgr        *sessionMgr.SessionMgr //连接管理器
+	sessionMgr        *sessionmgr.SessionMgr //连接管理器
 	loopFunc          func()                 //上层业务的Loop方法
 	closeFunc         func()                 //上层业务的关闭方法
 	reportFunc        discovery.ReportFunc
@@ -67,7 +67,7 @@ func NewService(id uint64, addr string, port int, kind uint32, protocol string, 
 		return nil
 	}
 	srv.NetClient = network.NetNetClient()
-	srv.sessionMgr = sessionMgr.NewSessionMgr()
+	srv.sessionMgr = sessionmgr.NewSessionMgr()
 	srv.MsgHandler = msgHandler.NewMsgHandler()
 	srv.RemoteLog = logger.NewLogger()
 	srv.Init()
@@ -213,26 +213,26 @@ func (service *Service) SendToService(sType uint32, id uint64, cmd uint16, msg I
 }
 
 // connectToServer 连接其他节点
-func (service *Service) connectToServer(sType uint32, serverId uint64) error {
-	if service.GetSID() == serverId {
+func (service *Service) connectToServer(sType uint32, serverID uint64) error {
+	if service.GetSID() == serverID {
 		return nil
 	}
-	if service.sessionMgr.GetSessByID(serverId) != nil {
+	if service.sessionMgr.GetSessByID(serverID) != nil {
 		return nil
 	}
-	info := discovery.GetServiceById(config.GetServiceName(sType), config.GetServiceID(sType, serverId))
+	info := discovery.GetServiceByID(config.GetServiceName(sType), config.GetServiceID(sType, serverID))
 	if info == nil {
-		seelog.Error("Connect id Not Found ", serverId)
+		seelog.Error("Connect id Not Found ", serverID)
 		return errors.New("error")
 	}
-	if e := service.dial("ws", info.Host, info.Port, serverId); e != nil {
-		seelog.Errorf("Connect id %d Info %v Error %s", serverId, info, e)
+	if e := service.dial("ws", info.Host, info.Port, serverID); e != nil {
+		seelog.Errorf("Connect id %d Info %v Error %s", serverID, info, e)
 		return e
 	}
 	m := &innerMsg.ClientConnect{}
 	m.Id = service.id
 	m.Kind = innerMsg.ConnectType_Server
-	service.SendMsg(serverId, uint16(innerMsg.InnerCmd_clientConnect), m)
+	service.SendMsg(serverID, uint16(innerMsg.InnerCmd_clientConnect), m)
 	return nil
 }
 

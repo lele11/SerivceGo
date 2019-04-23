@@ -10,6 +10,7 @@ import (
 	"github.com/cihub/seelog"
 )
 
+// TCPServer
 type TCPServer struct {
 	addr       string
 	tls        bool //是否支持tls
@@ -23,6 +24,7 @@ type TCPServer struct {
 	cType      uint8
 }
 
+// Init
 func (server *TCPServer) Init(addr, certKey, certFile string, tls bool) {
 	server.addr = addr
 	server.certKey = certKey
@@ -30,9 +32,12 @@ func (server *TCPServer) Init(addr, certKey, certFile string, tls bool) {
 	server.tls = tls
 }
 
+// SetConnAcceptor
 func (server *TCPServer) SetConnAcceptor(ca ConnAcceptor) {
 	server.acceptor = ca
 }
+
+// Run 运行
 func (server *TCPServer) Run() {
 	ln, err := net.Listen("tcp", server.addr)
 	if err != nil {
@@ -71,7 +76,7 @@ func (server *TCPServer) Run() {
 			}
 			tempDelay = 0
 
-			tcpConn := netConn.NewTCPConn(conn)
+			tcpConn := netconn.NewTCPConn(conn)
 			runner := server.acceptor.Accept(tcpConn, 0)
 			go runner.Start()
 		}
@@ -79,6 +84,7 @@ func (server *TCPServer) Run() {
 	return
 }
 
+// Close 关闭
 func (server *TCPServer) Close() {
 	if server.ln == nil {
 		return

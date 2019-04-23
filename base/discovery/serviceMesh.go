@@ -6,12 +6,15 @@ import (
 )
 
 const (
+	// GetServiceTypeMiniLoad 按照最低负载
 	GetServiceTypeMiniLoad = "MiniLoad"
-	GetServiceTypeRandom   = "Random"
+	// GetServiceTypeRandom 随机
+	GetServiceTypeRandom = "Random"
 )
 
 var poolMgr *ServicePoolMgr
 
+// getServicePoolMgr 获取某个服务池管理器
 func getServicePoolMgr() *ServicePoolMgr {
 	if poolMgr == nil {
 		poolMgr = &ServicePoolMgr{
@@ -21,19 +24,22 @@ func getServicePoolMgr() *ServicePoolMgr {
 	return poolMgr
 }
 
+// ServicePoolMgr 服务池管理器
 type ServicePoolMgr struct {
 	pool map[string]*ServicePool
 }
 
+// NewServicePool 创建某个服务的服务池
 func (spm *ServicePoolMgr) NewServicePool(name string) {
 	sp := &ServicePool{
 		name: name,
 	}
 	spm.pool[sp.name] = sp
-	sp.FreshData()
+	sp.freshData()
 	go sp.Run()
 }
 
+// GetAllList 获取某个服务的所有节点列表
 func (spm *ServicePoolMgr) GetAllList(name string) []*ServiceDesc {
 	s := spm.pool[name]
 	if s == nil {
@@ -42,47 +48,55 @@ func (spm *ServicePoolMgr) GetAllList(name string) []*ServiceDesc {
 	return s.list
 }
 
+// GetService 获取某个服务的一个节点
 func (spm *ServicePoolMgr) GetService(name string, id string, flag string) *ServiceDesc {
 	p, ok := spm.pool[name]
 	if !ok {
 		return nil
 	}
 	if id == "MiniLoad" {
-		return p.GetMiniLoad(flag)
+		return p.getMiniLoad(flag)
 	}
 	if id == "Random" {
-		return p.GetOne(flag)
+		return p.getOne(flag)
 	}
-	return p.GetById(id)
+	return p.getById(id)
 }
 
+// ServicePool 服务池 缓存某个服务类型的所有节点信息
 type ServicePool struct {
 	name string //服务的名称
 	list []*ServiceDesc
 	lock sync.RWMutex
 }
 
+// Run  运行服务池逻辑
 func (sp *ServicePool) Run() {
 	timer := time.NewTicker(3 * time.Second)
 	for {
 		select {
 		case <-timer.C:
-			sp.FreshData()
+			sp.freshData()
 			//TODO 没有服务时 是否需要退出
 		}
 	}
 }
 
-func (sp *ServicePool) FreshData() {
+// freshData 刷新
+func (sp *ServicePool) freshData() {
 	data := Default.Query(sp.name)
 	sp.lock.Lock()
 	sp.list = data
 	sp.lock.Unlock()
 }
+
+// isEmpty 是否为空
 func (sp *ServicePool) isEmpty() bool {
 	return len(sp.list) == 0
 }
-func (sp *ServicePool) GetOne(flag string) *ServiceDesc {
+
+// getOne 获取一个节点
+func (sp *ServicePool) getOne(flag string) *ServiceDesc {
 	if sp.isEmpty() {
 		return nil
 	}
@@ -99,7 +113,9 @@ func (sp *ServicePool) GetOne(flag string) *ServiceDesc {
 	}
 	return nil
 }
-func (sp *ServicePool) GetMiniLoad(flag string) *ServiceDesc {
+
+// getMiniLoad 获取最小负载
+func (sp *ServicePool) getMiniLoad(flag string) *ServiceDesc {
 	if sp.isEmpty() {
 		return nil
 	}
@@ -120,7 +136,9 @@ func (sp *ServicePool) GetMiniLoad(flag string) *ServiceDesc {
 	}
 	return mini
 }
-func (sp *ServicePool) GetById(id string) *ServiceDesc {
+
+// getById 根据id 获取
+func (sp *ServicePool) getById(id string) *ServiceDesc {
 	if sp.isEmpty() {
 		return nil
 	}

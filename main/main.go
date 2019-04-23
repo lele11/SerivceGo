@@ -51,14 +51,14 @@ func main() {
 	}
 	//redis初始化
 	redis.SetConfig(common.Redis.Host, common.Redis.Password)
-	srv := serverMgr.GetService(uint32(*kind))
+	srv := servermgr.GetService(uint32(*kind))
 	if srv == nil {
 		seelog.Errorf("Not Found Service Kind %d, you Need Use %s  ", *kind, uu)
 		return
 	}
 
 	var cfg *config.ServerConfig
-	info := discovery.GetServiceById(config.GetServiceName(uint32(*kind)), config.GetServiceID(uint32(*kind), util.StringToUint64(*id)))
+	info := discovery.GetServiceByID(config.GetServiceName(uint32(*kind)), config.GetServiceID(uint32(*kind), util.StringToUint64(*id)))
 	if info == nil {
 		seelog.Error("LoadServer Config error ", config.GetServiceID(uint32(*kind), util.StringToUint64(*id)))
 		return

@@ -9,7 +9,7 @@ type ConnRunner interface {
 
 // ConnAcceptor 接入连接处理器
 type ConnAcceptor interface {
-	Accept(conn netConn.Conn, defaultID uint64) ConnRunner
+	Accept(conn netconn.Conn, defaultID uint64) ConnRunner
 }
 
 // NetServer 网络服务对象

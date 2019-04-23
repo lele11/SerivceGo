@@ -12,7 +12,6 @@ import (
 	"game/db"
 	"game/protoMsg"
 	"math/rand"
-	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"strings"
@@ -23,18 +22,18 @@ import (
 )
 
 func init() {
-	serverMgr.Register(&LoginServer{})
+	servermgr.Register(&Server{})
 }
 
-// LoginServer 登录服务
-type LoginServer struct {
+// Server 登录服务
+type Server struct {
 	out        network.NetServer
 	randSource *rand.Rand
 	cfg        *config.ServerConfig
 }
 
 // Init 初始化
-func (login *LoginServer) Init(cfg *config.ServerConfig) {
+func (login *Server) Init(cfg *config.ServerConfig) {
 	login.out = network.NewNetWork(cfg.Protocol)
 	login.out.SetConnAcceptor(login)
 	login.randSource = rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -44,17 +43,17 @@ func (login *LoginServer) Init(cfg *config.ServerConfig) {
 }
 
 // GetSID 获取服务id
-func (login *LoginServer) GetSID() uint64 {
+func (login *Server) GetSID() uint64 {
 	return login.cfg.ID
 }
 
 // GetKind 获取服务类型
-func (login *LoginServer) GetKind() uint32 {
+func (login *Server) GetKind() uint32 {
 	return config.ServerKindLogin
 }
 
 // Run 主逻辑
-func (login *LoginServer) Run() {
+func (login *Server) Run() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
 
@@ -75,7 +74,7 @@ func (login *LoginServer) Run() {
 }
 
 // Accept 链接接收函数
-func (login *LoginServer) Accept(conn netConn.Conn, defaultId uint64) network.ConnRunner {
+func (login *Server) Accept(conn netconn.Conn, defaultId uint64) network.ConnRunner {
 	for {
 		data, err := conn.ReadMessage()
 		if err != nil {
@@ -109,12 +108,12 @@ func (login *LoginServer) Accept(conn netConn.Conn, defaultId uint64) network.Co
 }
 
 // Start 接口要求
-func (login *LoginServer) Start() {
+func (login *Server) Start() {
 
 }
 
 // login 登录函数
-func (login *LoginServer) login(param []byte) (r packet.IPacket) {
+func (login *Server) login(param []byte) (r packet.IPacket) {
 	r = &packet.Packet{}
 	r.SetCmd(6000)
 	var e error
@@ -131,7 +130,7 @@ func (login *LoginServer) login(param []byte) (r packet.IPacket) {
 	retMsg := &protoMsg.S_LoginServer{}
 	// 验证区服是否可以提供服务
 	if msg.ServerID != 0 {
-		info := discovery.GetServiceById(config.ServerName[config.ServerKindGame], config.GetServiceID(config.ServerKindGame, msg.ServerID))
+		info := discovery.GetServiceByID(config.ServerName[config.ServerKindGame], config.GetServiceID(config.ServerKindGame, msg.ServerID))
 		if info == nil {
 			retMsg.Result = 4
 			goto END
@@ -183,7 +182,7 @@ END:
 }
 
 // nodeUpdate TODO 负责函数
-func (login *LoginServer) nodeUpdate() (output *discovery.ServiceState, status string) {
+func (login *Server) nodeUpdate() (output *discovery.ServiceState, status string) {
 	output = &discovery.ServiceState{}
 	output.MemSys, output.GcPause = util.GetMemState()
 	status = "passing"
@@ -213,7 +212,7 @@ type ServerListReq struct {
 }
 
 // GetServerList 获取区服列表
-func (login *LoginServer) GetServerList(param []byte) (r *packet.Packet) {
+func (login *Server) GetServerList(param []byte) (r *packet.Packet) {
 	r = &packet.Packet{}
 	r.SetCmd(5100)
 	req := &ServerListReq{}

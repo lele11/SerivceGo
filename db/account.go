@@ -1,3 +1,5 @@
+package db
+
 /*
 	accountKey:用来保存用户账号相关的数据，玩家账号应相对独立于玩家的游戏数据
 	key格式： account:channel:accountName
@@ -7,7 +9,6 @@
 	TYPE 	1					// 账号的类型，可以区分管理员账号，普通账号
 	RECENT  [SID1,SID2...]		// 最近登录的区服列表，有序数组
 */
-package db
 
 import (
 	"game/base/redis"
@@ -23,7 +24,7 @@ func getAccountKey(channel, account string) string {
 	return AccountKey + ":" + channel + ":" + account
 }
 
-//账号数据结构  hash  keys ACCOUNT:CHANNEL  field ServerID value uid
+// GetAccountUID 账号数据结构  hash  keys ACCOUNT:CHANNEL  field ServerID value uid
 func GetAccountUID(loginChannel string, account string, serverID uint64) (uint64, bool) {
 	key := getAccountKey(loginChannel, account)
 	id := redis.HGetUint64(key, serverID)
@@ -38,10 +39,12 @@ func GetAccountUID(loginChannel string, account string, serverID uint64) (uint64
 	return uint64(id), true
 }
 
+// SetAccountType 设置账号类型
 func SetAccountType(channel, account string, aType uint32) {
 	redis.HSet(getAccountKey(channel, account), AccountFieldType, aType)
 }
 
+// AddAccountRecent 账号最近登录的区服
 func AddAccountRecent(channel, account string, serverID uint64) {
 	key := getAccountKey(channel, account)
 	var r []uint64
@@ -55,10 +58,14 @@ func AddAccountRecent(channel, account string, serverID uint64) {
 	r = append(r, serverID)
 	redis.HSetToJson(key, AccountFieldRecent, r)
 }
+
+// GetAccountRecent 获取最近区服列表
 func GetAccountRecent(channel, account string) (r []uint64) {
 	redis.HGetToStruct(getAccountKey(channel, account), AccountFieldRecent, &r)
 	return
 }
+
+// GetUniqueId 获取唯一ID
 func GetUniqueId(kind string) int64 {
 	return redis.HIncrby("UniqueId", kind, 1)
 }

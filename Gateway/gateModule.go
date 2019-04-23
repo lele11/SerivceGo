@@ -17,22 +17,22 @@ import (
 
 // init 服务注册
 func init() {
-	serverMgr.Register(&GatewayServer{})
+	servermgr.Register(&Server{})
 }
 
-// GatewayServer 网关服务
-type GatewayServer struct {
+// Server 网关服务
+type Server struct {
 	*base.Service
 	clientTransport map[uint64]uint64 //消息转发映射表 可以扩展不同层次的转发 如 按消息号区别目标服务类型
 }
 
 // GetKind 获取服务类型
-func (gate *GatewayServer) GetKind() uint32 {
+func (gate *Server) GetKind() uint32 {
 	return config.ServerKindGateway
 }
 
 // Init 初始化函数
-func (gate *GatewayServer) Init(cfg *config.ServerConfig) {
+func (gate *Server) Init(cfg *config.ServerConfig) {
 	gate.clientTransport = map[uint64]uint64{}
 	gate.Service = base.NewService(cfg.ID, cfg.Host, cfg.Port, cfg.Kind, cfg.Protocol, cfg)
 	gate.SetSessionVerifyHandler(gate.HandlerSessionVerify)
@@ -45,12 +45,12 @@ func (gate *GatewayServer) Init(cfg *config.ServerConfig) {
 }
 
 // Run 运行函数
-func (gate *GatewayServer) Run() {
+func (gate *Server) Run() {
 	gate.Service.Run()
 }
 
 // HandlerTransformPacketT 收到的外发消息
-func (gate *GatewayServer) HandlerTransformPacketT(packet packet.IPacket) {
+func (gate *Server) HandlerTransformPacketT(packet packet.IPacket) {
 	msg := &innerMsg.PacketTransport{}
 	if e := msg.Unmarshal(packet.GetBody()); e != nil {
 		return
@@ -59,7 +59,7 @@ func (gate *GatewayServer) HandlerTransformPacketT(packet packet.IPacket) {
 }
 
 // HandlerTransformPacket 收到的外部消息
-func (gate *GatewayServer) HandlerTransformPacket(packet packet.IPacket) {
+func (gate *Server) HandlerTransformPacket(packet packet.IPacket) {
 	if packet.GetCmd() == uint16(protoMsg.C_CMD_C_GETSERVERTIME) {
 		gate.SendMsg(packet.GetOrigin(), uint16(protoMsg.S_CMD_S_GETSERVERTIME), &protoMsg.S_GetServerTime{
 			ServerTime: time.Now().Unix(),
@@ -79,14 +79,14 @@ func (gate *GatewayServer) HandlerTransformPacket(packet packet.IPacket) {
 		2、基于客户端id，获取节点id
 	*/
 
-	srvId := gate.clientTransport[packet.GetOrigin()]
-	if srvId != 0 {
-		gate.SendToService(config.ServerKindGame, srvId, uint16(innerMsg.InnerCmd_transport), msg)
+	srvID := gate.clientTransport[packet.GetOrigin()]
+	if srvID != 0 {
+		gate.SendToService(config.ServerKindGame, srvID, uint16(innerMsg.InnerCmd_transport), msg)
 	}
 }
 
 // 某个服务节点的连接断掉，表示远端服务异常
-func (gate *GatewayServer) onServerClose(id uint64) {
+func (gate *Server) onServerClose(id uint64) {
 	for _, p := range gate.clientTransport {
 		if p == id {
 			//服务器异常关闭
@@ -96,7 +96,7 @@ func (gate *GatewayServer) onServerClose(id uint64) {
 }
 
 // HandlerCloseSession 业务层直接关闭session ，来源于重复登录，强制下线等操作
-func (gate *GatewayServer) HandlerCloseSession(packet packet.IPacket) {
+func (gate *Server) HandlerCloseSession(packet packet.IPacket) {
 	msg := &innerMsg.CloseSession{}
 	if e := msg.Unmarshal(packet.GetBody()); e != nil {
 		return
@@ -106,7 +106,7 @@ func (gate *GatewayServer) HandlerCloseSession(packet packet.IPacket) {
 }
 
 // HandlerClientConnect 底层连接状态变化通知，包括连接创建和销毁
-func (gate *GatewayServer) HandlerClientConnect(packet packet.IPacket) {
+func (gate *Server) HandlerClientConnect(packet packet.IPacket) {
 	msg := &innerMsg.ClientConnect{}
 	if msg.Unmarshal(packet.GetBody()) != nil {
 		return
@@ -123,7 +123,7 @@ func (gate *GatewayServer) HandlerClientConnect(packet packet.IPacket) {
 var errSessionKey = errors.New("Session Key Error ")
 
 // HandlerSessionVerify 远端接入验证函数 主要处理客户端接入
-func (gate *GatewayServer) HandlerSessionVerify(pack packet.IPacket) (p packet.IPacket) {
+func (gate *Server) HandlerSessionVerify(pack packet.IPacket) (p packet.IPacket) {
 	p = packet.GenPacket()
 	p.SetCmd(6001)
 	msg := &protoMsg.C_GameServer{}
@@ -153,7 +153,7 @@ END:
 	p.SetBody(d)
 	return
 }
-func (gate *GatewayServer) verifyDone(uid uint64, sid uint64) {
+func (gate *Server) verifyDone(uid uint64, sid uint64) {
 	if sid == 0 {
 		i := discovery.GetServiceMiniLoad(config.GetServiceName(config.ServerKindGame), gate.GetFlag())
 		sid = i.GetServiceNodeID()
@@ -180,7 +180,7 @@ func (gate *GatewayServer) verifyDone(uid uint64, sid uint64) {
 }
 
 // HandlerBroadMsg 广播消息处理 ，单服 全服
-func (gate *GatewayServer) HandlerBroadMsg(packet packet.IPacket) {
+func (gate *Server) HandlerBroadMsg(packet packet.IPacket) {
 	msg := &innerMsg.PacketTransport{}
 	if e := msg.Unmarshal(packet.GetBody()); e != nil {
 		return
@@ -189,7 +189,7 @@ func (gate *GatewayServer) HandlerBroadMsg(packet packet.IPacket) {
 }
 
 // nodeUpdate TODO 负责函数
-func (gate *GatewayServer) nodeUpdate() (output *discovery.ServiceState, status string) {
+func (gate *Server) nodeUpdate() (output *discovery.ServiceState, status string) {
 	output, status = gate.ServiceReport()
 	output.Load = uint32(len(gate.clientTransport))
 	return

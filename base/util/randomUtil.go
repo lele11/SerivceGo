@@ -28,7 +28,7 @@ func GetRandomNums(max int64, length int, except uint64) []uint64 {
 	return res
 }
 
-// RandRange
+// RandRange 随机
 func RandRange(start int64, end int64) int64 {
 	if start > end {
 		return 0

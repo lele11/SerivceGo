@@ -10,7 +10,6 @@ import (
 
 	"github.com/cihub/seelog"
 	_ "github.com/go-sql-driver/mysql"
-	"golang.org/x/net/http2"
 )
 
 func main() {
@@ -21,7 +20,7 @@ func main() {
 	logger.RemoteServerWorkerNum(10)
 	logger.RemoteServerRun()
 	s := &LogServer{}
-	s.startHttp("127.0.0.1:1000")
+	s.startHTTP("127.0.0.1:1000")
 }
 
 type LogServer struct {
@@ -32,31 +31,21 @@ func (l *LogServer) close() {
 	logger.RemoteServerClose()
 }
 
-func (l *LogServer) startHttp(addr string) {
+func (l *LogServer) startHTTP(addr string) {
 	server := &http.Server{
 		Addr:         addr,
 		Handler:      l,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 5 * time.Second,
+		IdleTimeout:  1 * time.Minute,
 	}
 
-	s2 := &http2.Server{
-		IdleTimeout: 1 * time.Minute,
-	}
-	http2.ConfigureServer(server, s2)
 	listener, e := net.Listen("tcp", addr)
 	if e != nil {
 		seelog.Error("Start Listen Error ", e)
 		return
 	}
-	for {
-		rwc, err := listener.Accept()
-		if err != nil {
-			continue
-		}
-
-		go s2.ServeConn(rwc, &http2.ServeConnOpts{BaseConfig: server})
-	}
+	go server.Serve(listener)
 }
 
 func (l *LogServer) ServeHTTP(rw http.ResponseWriter, request *http.Request) {

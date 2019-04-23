@@ -2,14 +2,29 @@ package util
 
 import "sort"
 
+/*
+	常用数据类型的slice排序
+		string
+		float64
+		float32
+		int64
+		int32
+		uint64
+		uint32
+		bool
+*/
+
+// SortStrings 字符串排序
 func SortStrings(l []string) {
 	sort.Strings(l)
 }
 
+// SortFloat64s float64
 func SortFloat64s(l []float64) {
 	sort.Float64s(l)
 }
 
+// SortFloat32s float32
 func SortFloat32s(l []float32) {
 	sort.Sort(Float32Slice(l))
 }

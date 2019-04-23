@@ -87,6 +87,7 @@ func NewRemoteServer(host string) error {
 	return nil
 }
 
+// RemoteLogServer 日志处理服务
 type RemoteLogServer struct {
 	mysqlDSN    string
 	db          *sql.DB
@@ -96,6 +97,7 @@ type RemoteLogServer struct {
 	workerNum   int
 }
 
+// AddLog 写入log
 func (server *RemoteLogServer) AddLog(l *LogData) {
 	if len(server.listChannel) > 199 {
 		return
@@ -103,7 +105,7 @@ func (server *RemoteLogServer) AddLog(l *LogData) {
 	server.listChannel <- l
 }
 
-//独立协程 处理所有的日志写入
+// ConsumeLog 独立协程 处理所有的日志写入
 func (server *RemoteLogServer) ConsumeLog() {
 	ticker := time.NewTicker(1 * time.Second)
 	for {
@@ -118,6 +120,7 @@ func (server *RemoteLogServer) ConsumeLog() {
 	}
 }
 
+// RotateTable
 func (server *RemoteLogServer) RotateTable() {
 	tableName := "log_" + time.Now().Format("20060102")
 	if tableName != server.nowTable {
@@ -162,6 +165,7 @@ func (server *RemoteLogServer) createTable(tableName string) {
 	}
 }
 
+// Close 关闭
 func (server *RemoteLogServer) Close() {
 	ww := &sync.WaitGroup{}
 	for _, w := range server.workerPool {
@@ -170,6 +174,8 @@ func (server *RemoteLogServer) Close() {
 	}
 	ww.Wait()
 }
+
+// Recycle 回收
 func (server *RemoteLogServer) Recycle() {
 
 }
@@ -217,6 +223,7 @@ func (server *RemoteLogServer) newWorker() *RemoteLogWorker {
 	}
 }
 
+// RemoteLogWorker 工作携程
 type RemoteLogWorker struct {
 	mgr    *RemoteLogServer
 	data   chan *LogData
@@ -226,11 +233,13 @@ type RemoteLogWorker struct {
 	signal chan int
 }
 
+// Close 关闭
 func (worker *RemoteLogWorker) Close(ww *sync.WaitGroup) {
 	worker.ww = ww
 	worker.close = true
 }
 
+// Push 推送
 func (worker *RemoteLogWorker) Push(d *LogData) {
 	worker.data <- d
 }
@@ -260,6 +269,7 @@ func (worker *RemoteLogWorker) do() {
 	}
 }
 
+// LogData 日志结构
 type LogData struct {
 	Uid    uint64 `json:"uid"`
 	OpenId string `json:"open_id"`

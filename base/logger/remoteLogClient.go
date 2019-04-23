@@ -2,14 +2,12 @@ package logger
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"game/base/safelist"
 	"net"
 	"net/http"
 
 	"github.com/cihub/seelog"
-	"golang.org/x/net/http2"
 )
 
 // TODO 是否可以做成单例 不需要业务层创建
@@ -50,8 +48,9 @@ func (l *RemoteLog) SetRemoteLogUrl(url string) *RemoteLog {
 	}
 	//TODO 检测地址是否有效
 	l.remoteURL = url
-	tr := &http2.Transport{
-		DialTLS: func(netw, addr string, cfg *tls.Config) (net.Conn, error) {
+
+	tr := &http.Transport{
+		DialTLS: func(netw, addr string) (net.Conn, error) {
 			return net.Dial(netw, addr)
 		},
 	}

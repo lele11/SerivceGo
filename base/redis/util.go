@@ -189,62 +189,62 @@ func HGet(key string, field interface{}) string {
 	return hGet(key, field)
 }
 
-// HSet
+// HSet hash 设置
 func HSet(key string, field interface{}, value interface{}) {
 	hSet(key, field, value)
 }
 
-// HMSet
+// HMSet HMSet
 func HMSet(key string, field map[interface{}]interface{}) {
 	hMSet(key, field)
 }
 
-// HDEL
+// HDEL 删除
 func HDEL(key string, field interface{}) {
 	hDEL(key, field)
 }
 
-// HExists
+// HExists field是否存在
 func HExists(key string, field interface{}) bool {
 	return hExists(key, field)
 }
 
-// HLen
+// HLen hash长度
 func HLen(key string) uint64 {
 	return hLen(key)
 }
 
-// HSetNx
+// HSetNx 如果没有则设置成功
 func HSetNx(key string, field, value interface{}) bool {
 	return hSetNx(key, field, value)
 }
 
-// ZRevRank
+// ZRevRank 获取排名
 func ZRevRank(key string, member interface{}) uint64 {
 	return zRevRank(key, member)
 }
 
-// ZRevRange
+// ZRevRange 获取排行信息 ，从大到小
 func ZRevRange(key string, start, end interface{}, isScore bool) []string {
 	return zRevRange(key, start, end, isScore)
 }
 
-// ZAdd
+// ZAdd 添加zset
 func ZAdd(key string, field, value interface{}) {
 	zAdd(key, field, value)
 }
 
-// ZCard
+// ZCard 集合大小
 func ZCard(key string) uint64 {
 	return zCard(key)
 }
 
-// ZRangeByScore
+// ZRangeByScore 按分值排名
 func ZRangeByScore(key string, start, end interface{}) []string {
 	return zRangeByScore(key, start, end, false)
 }
 
-// ZRangeByScoreWithLimit
+// ZRangeByScoreWithLimit 设置获取列表大小
 func ZRangeByScoreWithLimit(key string, start, end, limit interface{}) []string {
 	return zRangeByScoreWithLimit(key, start, end, limit)
 }

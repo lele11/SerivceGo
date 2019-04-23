@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	serverMgr.Register(&GameServer{})
+	servermgr.Register(&GameServer{})
 }
 
 type GameServer struct {
