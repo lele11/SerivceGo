@@ -1,0 +1,39 @@
+1.脚本介绍
+	common.py 工具函数文件和 静态配置文件
+	consul/consul.exe 可执行文件
+	node.json consul的启动配置文件
+	runConfig.py 批量执行命令脚本
+	service.py  对游戏服务配置管理的脚本，可做增删改等操作
+	start.py 启动consul
+
+
+
+2.配置业务服务
+	2.1 在common.py 文件中注册游戏业务的配置信息,例如：
+		----------------------------------------------------
+			serviceNameToKind = {
+				"miniGame_Gateway": "2",
+				"miniGame_Game": "3",
+				"miniGame_Login": "4",
+			}
+		-----------------------------------------------------
+	2.2 配置游戏业务添加命令配置文件，如：miniGame.conf
+		-----------------------------------------------------
+			python service.py -d create -k Login -i 1001 -a 127.0.0.1 -p 8070 -m domain=XXX.ztgame.com
+			python service.py -d create -k Gateway -i 2001 -a 127.0.0.1
+			python service.py -d create -k Game -i 3001 -a 127.0.0.1 -m name=测试1服 open=20160102
+		-----------------------------------------------------
+		
+		执行 python runConfig.py -c miniGame.conf ,可以生成对于的配置文件
+		
+		**********************************************************
+		添加服务配置：
+		  python service.py -d create -k Game -i 3001 -a 127.0.0.1 -p 3001 
+		更新服务配置：
+		  python service.py -d update -k Game -i 3001 -a 127.0.0.1
+		删除服务配置：
+		  python service.py -d delete -k Game -i 3001		
+		**********************************************************
+3 启动
+	命令： python start.py
+consul服务启动成功

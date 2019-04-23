@@ -1,0 +1,19 @@
+{
+  "datacenter": "center",
+  "data_dir": "./data",
+  "log_level": "INFO",
+  "node_name": "miniGame",
+  "server": true,
+  "bootstrap":true,
+  "bootstrap_expect": 0,
+  "bind_addr": "127.0.0.1",
+  "client_addr": "0.0.0.0",
+  "ui": true,
+  "retry_join": [],
+  "retry_interval": "30s",
+  "enable_debug": false,
+  "rejoin_after_leave": true,
+  "start_join": [],
+  "enable_syslog": false,
+  "syslog_facility": ""
+}

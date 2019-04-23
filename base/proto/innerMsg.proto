@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+
+enum InnerCmd{
+	c = 0;
+	transport = 100;
+	serverUpdate = 101;
+	serverBroad = 102;
+	clientConnect = 103;
+	closeSession = 104;
+	serverConnect = 105;
+	broadMsg = 106;
+}
+enum ConnectType{
+	Client = 0;
+	Server = 1;
+}
+enum ConnectState{
+	alive = 0;
+	dead = 1;
+}
+message PacketTransport{
+	uint64 target = 1;
+	int32 cmd = 2;
+	bytes data = 3;
+}
+
+message ClientConnect{
+	uint64 id = 1;
+	ConnectType kind = 2;
+	ConnectState state = 3;
+}
+
+message PlayerConnect{
+	uint64 uid = 1;
+	uint32 kind = 2;
+}
+
+message CloseSession{
+	uint64 id = 1;
+}
+message ServerUpdate{
+	uint64 sID = 1;
+	uint32 load = 2;
+	uint32 state = 3;
+	bytes info = 4;
+}
+message ServerInfoBroad{
+	message ServerInfo {
+		uint64 id = 1;
+		uint32 state = 2;
+		string addr = 3;
+		string protocol = 4;
+		uint64 node = 5;
+		uint32 load = 6;
+	}
+	repeated ServerInfo list = 1;
+}
