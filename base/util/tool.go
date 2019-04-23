@@ -6,15 +6,19 @@ import (
 )
 
 const (
-	RandomIntTOStringSource = "E5FCDG3HQA4B1NOPIJ2RSTUV67MWX89KLYZ"
+	// RandomIntToStringSource 数字 <=> 字符串 编码源数据
+	RandomIntToStringSource = "E5FCDG3HQA4B1NOPIJ2RSTUV67MWX89KLYZ"
+	// RandomStringSource 随机字符串源数据
+	RandomStringSource = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 )
 
+// EncodeStringCode 数字编码为字符串
 func EncodeStringCode(num uint64) string {
 	code := ""
 	for num > 0 {
 		mod := num % 35
 		num = (num - mod) / 35
-		code = string(RandomIntTOStringSource[mod]) + code
+		code = string(RandomIntToStringSource[mod]) + code
 	}
 	for len(code) < 6 {
 		code = "0" + code
@@ -23,12 +27,13 @@ func EncodeStringCode(num uint64) string {
 	return code
 }
 
+// DecodeStringCode 解析字符串为数字
 func DecodeStringCode(code string) uint64 {
 	code = strings.Replace(code, "0", "", -1)
 	var num uint64
 	for i, length := 0, len(code); i < length; i++ {
 		var pos uint64
-		for k, v := range RandomIntTOStringSource {
+		for k, v := range RandomIntToStringSource {
 			if uint8(v) == code[i] {
 				pos = uint64(k)
 				break
@@ -43,9 +48,9 @@ func DecodeStringCode(code string) uint64 {
 	return num
 }
 
+// RandomString 随机字符串
 func RandomString(rand *rand.Rand) string {
-	str := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	bytes := []byte(str)
+	bytes := []byte(RandomStringSource)
 	var result []byte
 	for i := 0; i < 16; i++ {
 		result = append(result, bytes[rand.Intn(len(bytes))])

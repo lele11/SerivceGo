@@ -7,14 +7,14 @@ import (
 	log "github.com/cihub/seelog"
 )
 
-//返回今天零点对应的时间戳
+// GetTodayBeginStamp 返回今天零点对应的时间戳
 func GetTodayBeginStamp() int64 {
 	t := time.Now()
 	t = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.Local)
 	return t.Unix()
 }
 
-// 返回本周一零点对应的时间戳
+// GetThisWeekBeginStamp 返回本周一零点对应的时间戳
 func GetThisWeekBeginStamp() int64 {
 	//TODO 思路复杂 只需要通过周内的 天数差 计算，不需要通过周数计算
 	t := time.Now()
@@ -40,7 +40,7 @@ func GetThisWeekBeginStamp() int64 {
 	return date.Unix()
 }
 
-//判断一个时间戳是周几(1-7)
+// WhatDayOfWeek 判断一个时间戳是周几(1-7)
 func WhatDayOfWeek(stamp int64) int {
 	weekDays := map[string]int{
 		"monday":    1,
@@ -58,14 +58,14 @@ func WhatDayOfWeek(stamp int64) int {
 	return weekDays[day]
 }
 
-//获取本周某一日零点对应的时间戳，whatDay表示周几(1-7)
+// GetWeekDayBeginStamp 获取本周某一日零点对应的时间戳，whatDay表示周几(1-7)
 func GetWeekDayBeginStamp(whatDay uint8) int64 {
 	begin := GetThisWeekBeginStamp()
 	day := int64(24 * 60 * 60)
 	return begin + int64(whatDay-1)*day
 }
 
-//判断一个时间戳是否在本周的时间段内
+// IsInThisWeek 判断一个时间戳是否在本周的时间段内
 func IsInThisWeek(stamp int64) bool {
 	begin := GetThisWeekBeginStamp()
 	if stamp < begin {
@@ -80,18 +80,19 @@ func IsInThisWeek(stamp int64) bool {
 	return true
 }
 
-//获取下一个整点的时间戳
+// GetNextHoursStamp 获取下一个整点的时间戳
 func GetNextHoursStamp() int64 {
 	now := time.Now()
 	return now.Unix() + int64((60-now.Minute())*60-now.Second())
 }
 
-//获取下一个整点的时间差
+// GetNextHoursDur 获取下一个整点的时间差
 func GetNextHoursDur() int64 {
 	now := time.Now()
 	return int64((60-now.Minute())*60 - now.Second())
 }
 
+// TimeStringToTime 时间字符串解析
 func TimeStringToTime(ts string) *time.Time {
 	t, e := time.ParseInLocation("2006|01|02|15|04|05", ts, time.Local)
 	if e != nil {
@@ -99,6 +100,8 @@ func TimeStringToTime(ts string) *time.Time {
 	}
 	return &t
 }
+
+// TimeIsDayBegin 是否一天开始
 func TimeIsDayBegin() bool {
 	if time.Now().Hour() == 0 &&
 		time.Now().Minute() == 0 &&

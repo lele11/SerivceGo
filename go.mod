@@ -13,6 +13,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.1 // indirect
 	github.com/hashicorp/go-rootcerts v1.0.0 // indirect
 	github.com/hashicorp/serf v0.8.2 // indirect
+	github.com/jondot/goweight v1.0.4 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	golang.org/x/net v0.0.0-20190320064053-1272bf9dcd53
 	gopkg.in/yaml.v2 v2.2.2

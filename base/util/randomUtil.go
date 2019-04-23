@@ -1,6 +1,6 @@
 package util
 
-//随机范围 [1,max]
+// GetRandomNums 随机范围 [1,max]
 func GetRandomNums(max int64, length int, except uint64) []uint64 {
 	var res []uint64
 	var has bool
@@ -28,6 +28,7 @@ func GetRandomNums(max int64, length int, except uint64) []uint64 {
 	return res
 }
 
+// RandRange
 func RandRange(start int64, end int64) int64 {
 	if start > end {
 		return 0
@@ -59,7 +60,7 @@ func WeightRandom(list map[interface{}]float32) interface{} {
 	return nil
 }
 
-// WeightRandom 加权随机算法
+// WeightRandomUint32 加权随机算法
 func WeightRandomUint32(list map[uint32]float32) uint32 {
 	if len(list) == 0 {
 		return 0

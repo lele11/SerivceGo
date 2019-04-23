@@ -15,10 +15,10 @@ type consulDiscovery struct {
 	kvCache    sync.Map // map[string]*KVPair
 }
 
-//  WaitReady 等待consul服务启动成功
-func (self *consulDiscovery) WaitReady() {
+// WaitReady 等待consul服务启动成功
+func (cd *consulDiscovery) WaitReady() {
 	for {
-		_, _, err := self.client.Health().Service("consul", "", false, nil)
+		_, _, err := cd.client.Health().Service("consul", "", false, nil)
 		if err == nil {
 			break
 		}
@@ -27,6 +27,7 @@ func (self *consulDiscovery) WaitReady() {
 	}
 }
 
+// NewDiscovery 创建consul 发现客户端
 func NewDiscovery(address string, kvPrefix string) discovery.Discovery {
 	if address == "" {
 		address = "127.0.0.1:8500"

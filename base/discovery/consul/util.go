@@ -19,6 +19,7 @@ func isServiceHealth(entry *api.ServiceEntry) bool {
 	return true
 }
 
+// BytesToAny 二进制流转换函数
 func BytesToAny(data []byte, dataPtr interface{}) error {
 	switch ret := dataPtr.(type) {
 	case *int:
@@ -57,6 +58,7 @@ func BytesToAny(data []byte, dataPtr interface{}) error {
 	}
 }
 
+// AnyToBytes 二进制流转换函数
 func AnyToBytes(data interface{}) ([]byte, error) {
 	switch v := data.(type) {
 	case int, int32, int64, uint32, uint64, float32, float64, bool:

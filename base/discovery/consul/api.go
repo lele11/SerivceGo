@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/consul/api"
 )
 
-func (self *consulDiscovery) Query(name string) (ret []*discovery.ServiceDesc) {
+func (cd *consulDiscovery) Query(name string) (ret []*discovery.ServiceDesc) {
 	var e error
-	ret, e = self.directQuery(name)
+	ret, e = cd.directQuery(name)
 	if e != nil {
 		seelog.Errorf("query Service Error %s %v", name, e)
 		return
@@ -19,8 +19,8 @@ func (self *consulDiscovery) Query(name string) (ret []*discovery.ServiceDesc) {
 }
 
 // from github.com/micro/go-micro/registry/consul_registry.go
-func (self *consulDiscovery) directQuery(name string) (ret []*discovery.ServiceDesc, err error) {
-	result, _, err := self.client.Health().Service(name, "", false, nil)
+func (cd *consulDiscovery) directQuery(name string) (ret []*discovery.ServiceDesc, err error) {
+	result, _, err := cd.client.Health().Service(name, "", false, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -51,8 +51,8 @@ func (self *consulDiscovery) directQuery(name string) (ret []*discovery.ServiceD
 	return
 }
 
-func (self *consulDiscovery) QueryServices() (ret []string) {
-	ss, e := self.client.Agent().Services()
+func (cd *consulDiscovery) QueryServices() (ret []string) {
+	ss, e := cd.client.Agent().Services()
 	if e != nil {
 		return
 	}
@@ -71,8 +71,8 @@ func (self *consulDiscovery) QueryServices() (ret []string) {
 	return
 }
 
-func (self *consulDiscovery) Register(svc *discovery.ServiceDesc) error {
-	err := self.client.Agent().ServiceRegister(&api.AgentServiceRegistration{
+func (cd *consulDiscovery) Register(svc *discovery.ServiceDesc) error {
+	err := cd.client.Agent().ServiceRegister(&api.AgentServiceRegistration{
 		ID:                svc.ID,
 		Name:              svc.Name,
 		Address:           svc.Host,
@@ -88,11 +88,11 @@ func (self *consulDiscovery) Register(svc *discovery.ServiceDesc) error {
 	return err
 }
 
-func (self *consulDiscovery) Deregister(svcid string) error {
-	return self.client.Agent().ServiceDeregister(svcid)
+func (cd *consulDiscovery) Deregister(svcid string) error {
+	return cd.client.Agent().ServiceDeregister(svcid)
 }
-func (self *consulDiscovery) UpdateService(serviceID string, status, info string) error {
-	if e := self.client.Agent().UpdateTTL(serviceID, info, status); e != nil {
+func (cd *consulDiscovery) UpdateService(serviceID string, status, info string) error {
+	if e := cd.client.Agent().UpdateTTL(serviceID, info, status); e != nil {
 		return e
 	}
 	return nil

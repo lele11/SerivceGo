@@ -43,7 +43,6 @@ func main() {
 	common, e := config.LoadCommonConfig()
 	if e != nil {
 		panic("Load Common Config Error , Not Found Info In Consul K/V")
-		return
 	}
 	//日志初始化
 	dd := logger.Init(common.LogPath+config.ServerName[uint32(*kind)], common.LogLevel)
@@ -63,25 +62,25 @@ func main() {
 	if info == nil {
 		seelog.Error("LoadServer Config error ", config.GetServiceID(uint32(*kind), util.StringToUint64(*id)))
 		return
-	} else {
-		seelog.Info(info.String())
-		cfg = &config.ServerConfig{
-			ID:        info.GetMetaAsUint64("id"),
-			Kind:      uint32(*kind),
-			Host:      info.Host,
-			Port:      info.Port,
-			Protocol:  "ws",
-			Meta:      info.Meta,
-			Tag:       info.Tag,
-			Name:      info.GetMeta("name"),
-			OpenStamp: info.GetMeta("open"),
-			State:     info.GetMetaAsUint32("state"),
-			Domain:    info.GetMeta("domain"),
-		}
-		if info.Port == 0 {
-			cfg.Port, _ = util.GetFreePort()
-		}
 	}
+	seelog.Info(info.String())
+	cfg = &config.ServerConfig{
+		ID:        info.GetMetaAsUint64("id"),
+		Kind:      uint32(*kind),
+		Host:      info.Host,
+		Port:      info.Port,
+		Protocol:  "ws",
+		Meta:      info.Meta,
+		Tag:       info.Tag,
+		Name:      info.GetMeta("name"),
+		OpenStamp: info.GetMeta("open"),
+		State:     info.GetMetaAsUint32("state"),
+		Domain:    info.GetMeta("domain"),
+	}
+	if info.Port == 0 {
+		cfg.Port, _ = util.GetFreePort()
+	}
+
 	srv.Init(cfg)
 	srv.Run()
 }

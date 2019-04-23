@@ -19,13 +19,14 @@ import (
 	"github.com/cihub/seelog"
 )
 
-//可以被打包的消息结构 为了兼容proto
+// IMsg 可以被打包的消息结构 为了兼容proto
 type IMsg interface {
 	Unmarshal(data []byte) error
 	Marshal() (dAtA []byte, err error)
 	Size() (n int)
 }
 
+// IService 基础服务接口
 type IService interface {
 	Run()
 	Init(serverConfig *config.ServerConfig)
@@ -33,6 +34,7 @@ type IService interface {
 	GetKind() uint32
 }
 
+// Service 基础服务结构
 type Service struct {
 	cfg                    *config.ServerConfig
 	id                     uint64
@@ -72,22 +74,31 @@ func NewService(id uint64, addr string, port int, kind uint32, protocol string, 
 	return srv
 }
 
+// Init 初始化函数
 func (service *Service) Init() {
 	service.SetReporter(service.ServiceReport)
-	service.NetServer.Init(service.addr+":"+util.IntToString(service.port), config.CertKey, config.CertFile, false)
+	service.NetServer.Init(service.addr+":"+util.IntToString(service.port), "", "", false)
 	service.NetServer.SetConnAcceptor(service.sessionMgr)
 	service.NetClient.SetConnAcceptor(service.sessionMgr)
 	service.sessionMgr.SetMsgReceiver(service.MsgHandler)
 }
+
+// GetKind 获取上层业务类型
 func (service *Service) GetKind() uint32 {
 	return service.kind
 }
+
+// GetSID 获取上层业务id
 func (service *Service) GetSID() uint64 {
 	return service.id
 }
+
+// GetFlag 获取上层业务标记
 func (service *Service) GetFlag() string {
 	return service.cfg.Meta["flag"]
 }
+
+// Close 关闭
 func (service *Service) Close() {
 	if service.closeFunc != nil {
 		service.closeFunc()
@@ -108,6 +119,7 @@ func (service *Service) Run() {
 	service.doLoop()
 }
 
+// doLoop 业务逻辑处理
 func (service *Service) doLoop() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM, os.Interrupt)
@@ -127,18 +139,22 @@ func (service *Service) doLoop() {
 	}
 }
 
+// SetUpdate 设置上层业务内部逻辑处理函数
 func (service *Service) SetUpdate(f func()) {
 	service.loopFunc = f
 }
 
+// SetClose 设置上层业务关闭回调函数
 func (service *Service) SetClose(f func()) {
 	service.closeFunc = f
 }
 
+// SetSessionVerifyHandler 设置session自定义验证函数
 func (service *Service) SetSessionVerifyHandler(f func(packet packet.IPacket) packet.IPacket) {
 	service.sessionMgr.SetVerifyHandler(f)
 }
 
+// SendData 发送二进制数据
 func (service *Service) SendData(target uint64, cmd uint16, data []byte) {
 	p := &packet.Packet{}
 	p.SetCmd(cmd)
@@ -167,6 +183,8 @@ func (service *Service) SendMsg(id uint64, cmd uint16, msg IMsg) {
 
 	service.SendData(id, cmd, data)
 }
+
+// SendDirect 直接发送至session
 func (service *Service) SendDirect(p packet.IPacket) {
 	s := service.sessionMgr.GetSessByID(p.GetTarget())
 	if s != nil {
@@ -174,12 +192,12 @@ func (service *Service) SendDirect(p packet.IPacket) {
 	}
 }
 
-//SendToService 发送到某个服务器 ，与sendMsg的区别
+// SendToService 发送到某个服务器 ，与sendMsg的区别
 func (service *Service) SendToService(sType uint32, id uint64, cmd uint16, msg IMsg) {
 	if id == 0 {
 		return
 	}
-	if service.ConnectToServer(sType, id) != nil {
+	if service.connectToServer(sType, id) != nil {
 		return
 	}
 	var data []byte
@@ -193,7 +211,9 @@ func (service *Service) SendToService(sType uint32, id uint64, cmd uint16, msg I
 	}
 	service.SendData(id, cmd, data)
 }
-func (service *Service) ConnectToServer(sType uint32, serverId uint64) error {
+
+// connectToServer 连接其他节点
+func (service *Service) connectToServer(sType uint32, serverId uint64) error {
 	if service.GetSID() == serverId {
 		return nil
 	}
@@ -205,7 +225,7 @@ func (service *Service) ConnectToServer(sType uint32, serverId uint64) error {
 		seelog.Error("Connect id Not Found ", serverId)
 		return errors.New("error")
 	}
-	if e := service.Dial("ws", info.Host, info.Port, serverId); e != nil {
+	if e := service.dial("ws", info.Host, info.Port, serverId); e != nil {
 		seelog.Errorf("Connect id %d Info %v Error %s", serverId, info, e)
 		return e
 	}
@@ -216,11 +236,13 @@ func (service *Service) ConnectToServer(sType uint32, serverId uint64) error {
 	return nil
 }
 
+// CloseSession 关闭session
 func (service *Service) CloseSession(id uint64, normal bool) {
 	service.sessionMgr.CloseSession(id, normal)
 }
 
-func (service *Service) Dial(protocol, addr string, port int, id uint64) error {
+// dial 主动建立连接
+func (service *Service) dial(protocol, addr string, port int, id uint64) error {
 	addr = addr + ":" + util.IntToString(port)
 	err := service.NetClient.Dial(protocol, addr, id)
 	if err != nil {
@@ -229,6 +251,7 @@ func (service *Service) Dial(protocol, addr string, port int, id uint64) error {
 	return nil
 }
 
+// NewNetWork 创建网络服务
 func (service *Service) NewNetWork(protocol, addr, certKey, certFile string, tls bool) network.NetServer {
 	n := network.NewNetWork(protocol)
 	n.Init(addr, certKey, certFile, tls)
@@ -236,9 +259,12 @@ func (service *Service) NewNetWork(protocol, addr, certKey, certFile string, tls
 	return n
 }
 
+// SetReporter 设置状态上报函数
 func (service *Service) SetReporter(f discovery.ReportFunc) {
 	service.reportFunc = f
 }
+
+// register 注册服务
 func (service *Service) register() {
 	desc := &discovery.ServiceDesc{
 		ID:       config.GetServiceID(service.GetKind(), service.GetSID()),
@@ -256,6 +282,7 @@ func (service *Service) register() {
 	}
 }
 
+// ServiceReport 默认服务上报函数
 func (service *Service) ServiceReport() (output *discovery.ServiceState, status string) {
 	output = &discovery.ServiceState{}
 	output.MemSys, output.GcPause = util.GetMemState()

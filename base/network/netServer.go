@@ -2,17 +2,17 @@ package network
 
 import "game/base/network/netConn"
 
-// 连接服务保持对象
+// ConnRunner 连接服务保持对象
 type ConnRunner interface {
 	Start()
 }
 
-// 接入连接处理器
+// ConnAcceptor 接入连接处理器
 type ConnAcceptor interface {
 	Accept(conn netConn.Conn, defaultID uint64) ConnRunner
 }
 
-// 网络服务对象
+// NetServer 网络服务对象
 type NetServer interface {
 	// 设置处理接入连接的处理对象
 	SetConnAcceptor(acceptor ConnAcceptor)
@@ -24,7 +24,7 @@ type NetServer interface {
 	Init(addr, certKey, certFile string, tls bool)
 }
 
-// 创建网络服务
+// NewNetWork 创建网络服务
 func NewNetWork(protocol string) NetServer {
 	switch protocol {
 	case "tcp":
@@ -34,6 +34,4 @@ func NewNetWork(protocol string) NetServer {
 	default:
 		return nil
 	}
-	return nil
-
 }

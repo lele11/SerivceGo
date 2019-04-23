@@ -9,12 +9,13 @@ import (
 	"github.com/hashicorp/consul/watch"
 )
 
-func (self *consulDiscovery) SetValue(key string, dataPtr interface{}) error {
+// SetValue 设置键值数据
+func (cd *consulDiscovery) SetValue(key string, dataPtr interface{}) error {
 	raw, err := AnyToBytes(dataPtr)
 	if err != nil {
 		return err
 	}
-	_, err = self.client.KV().Put(&api.KVPair{
+	_, err = cd.client.KV().Put(&api.KVPair{
 		Key:   key,
 		Value: raw,
 	}, nil)
@@ -22,8 +23,9 @@ func (self *consulDiscovery) SetValue(key string, dataPtr interface{}) error {
 	return err
 }
 
-func (self *consulDiscovery) GetValue(key string, valuePtr interface{}) error {
-	data, err := self.GetRawValue(key)
+// GetValue 获取KV数据，根据参数做转换
+func (cd *consulDiscovery) GetValue(key string, valuePtr interface{}) error {
+	data, err := cd.GetRawValue(key)
 	if err != nil {
 		return err
 	}
@@ -31,13 +33,14 @@ func (self *consulDiscovery) GetValue(key string, valuePtr interface{}) error {
 	return BytesToAny(data, valuePtr)
 }
 
-func (self *consulDiscovery) GetRawValue(key string) ([]byte, error) {
-	if raw, ok := self.kvCache.Load(key); ok {
+// GetRawValue 获取二进制数据
+func (cd *consulDiscovery) GetRawValue(key string) ([]byte, error) {
+	if raw, ok := cd.kvCache.Load(key); ok {
 		meta := raw.(*KVMeta)
 		return meta.Value(), nil
 	}
 	// cache中没找到直接获取
-	kvpair, _, err := self.client.KV().Get(key, nil)
+	kvpair, _, err := cd.client.KV().Get(key, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -47,16 +50,19 @@ func (self *consulDiscovery) GetRawValue(key string) ([]byte, error) {
 	return kvpair.Value, nil
 }
 
-func (self *consulDiscovery) DeleteValue(key string) error {
-	_, err := self.client.KV().Delete(key, nil)
+// DeleteValue 删除数据
+func (cd *consulDiscovery) DeleteValue(key string) error {
+	_, err := cd.client.KV().Delete(key, nil)
 	return err
 }
 
 var (
+	// ErrValueNotExists 不存在
 	ErrValueNotExists = errors.New("value not exists")
 )
 
-func (self *consulDiscovery) startWatchKV(prefix string) {
+// startWatchKV 开始监控
+func (cd *consulDiscovery) startWatchKV(prefix string) {
 	if prefix == "" {
 		prefix = "/"
 	}
@@ -69,29 +75,33 @@ func (self *consulDiscovery) startWatchKV(prefix string) {
 		return
 	}
 
-	plan.Handler = self.onKVListChanged
-	go plan.Run(self.consulAddr)
+	plan.Handler = cd.onKVListChanged
+	go plan.Run(cd.consulAddr)
 }
 
+// KVMeta KV数据结构
 type KVMeta struct {
 	value      []byte
 	valueGuard sync.RWMutex
 	Plan       *watch.Plan
 }
 
-func (self *KVMeta) SetValue(v []byte) {
-	self.valueGuard.Lock()
-	self.value = v
-	self.valueGuard.Unlock()
+// SetValue 设置值
+func (km *KVMeta) SetValue(v []byte) {
+	km.valueGuard.Lock()
+	km.value = v
+	km.valueGuard.Unlock()
 }
 
-func (self *KVMeta) Value() []byte {
-	self.valueGuard.RLock()
-	defer self.valueGuard.RUnlock()
-	return self.value
+// Value 获取值
+func (km *KVMeta) Value() []byte {
+	km.valueGuard.RLock()
+	defer km.valueGuard.RUnlock()
+	return km.value
 }
 
-func (self *consulDiscovery) onKVListChanged(u uint64, data interface{}) {
+// onKVListChanged 变化回调
+func (cd *consulDiscovery) onKVListChanged(u uint64, data interface{}) {
 	kvNames, ok := data.(api.KVPairs)
 	if !ok {
 		return
@@ -99,7 +109,7 @@ func (self *consulDiscovery) onKVListChanged(u uint64, data interface{}) {
 
 	for _, kv := range kvNames {
 		// 已经在cache里的,肯定添加过watch了
-		if _, ok := self.kvCache.Load(kv.Key); ok {
+		if _, ok := cd.kvCache.Load(kv.Key); ok {
 			continue
 		}
 		plan, err := watch.Parse(map[string]interface{}{
@@ -108,9 +118,9 @@ func (self *consulDiscovery) onKVListChanged(u uint64, data interface{}) {
 		})
 
 		if err == nil {
-			plan.Handler = self.onKVChanged
-			go plan.Run(self.consulAddr)
-			self.kvCache.Store(kv.Key, &KVMeta{
+			plan.Handler = cd.onKVChanged
+			go plan.Run(cd.consulAddr)
+			cd.kvCache.Store(kv.Key, &KVMeta{
 				value: kv.Value,
 				Plan:  plan,
 			})
@@ -118,7 +128,7 @@ func (self *consulDiscovery) onKVListChanged(u uint64, data interface{}) {
 	}
 
 	var foundKey []string
-	self.kvCache.Range(func(key, value interface{}) bool {
+	cd.kvCache.Range(func(key, value interface{}) bool {
 		kvKey := key.(string)
 		if !existsInPairs(kvNames, kvKey) {
 			meta := value.(*KVMeta)
@@ -129,11 +139,12 @@ func (self *consulDiscovery) onKVListChanged(u uint64, data interface{}) {
 	})
 
 	for _, k := range foundKey {
-		self.kvCache.Delete(k)
+		cd.kvCache.Delete(k)
 	}
 
 }
 
+// existsInPairs
 func existsInPairs(kvp api.KVPairs, key string) bool {
 	for _, kv := range kvp {
 		if kv.Key == key {
@@ -143,13 +154,14 @@ func existsInPairs(kvp api.KVPairs, key string) bool {
 	return false
 }
 
-func (self *consulDiscovery) onKVChanged(u uint64, data interface{}) {
+// onKVChanged
+func (cd *consulDiscovery) onKVChanged(u uint64, data interface{}) {
 	kv, ok := data.(*api.KVPair)
 	if !ok {
 		return
 	}
 
-	if raw, ok := self.kvCache.Load(kv.Key); ok {
+	if raw, ok := cd.kvCache.Load(kv.Key); ok {
 		raw.(*KVMeta).SetValue(kv.Value)
 	}
 }

@@ -2,8 +2,8 @@ package network
 
 import (
 	"crypto/tls"
-	"net"
 	"game/base/network/netConn"
+	"net"
 	"sync"
 	"time"
 

@@ -1,8 +1,8 @@
 package network
 
 import (
-	"net"
 	"game/base/network/netConn"
+	"net"
 
 	"github.com/gorilla/websocket"
 )

@@ -1,9 +1,9 @@
 package network
 
 import (
+	"game/base/network/netConn"
 	"net"
 	"net/http"
-	"game/base/network/netConn"
 	"time"
 
 	"github.com/cihub/seelog"

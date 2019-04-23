@@ -26,12 +26,14 @@ func init() {
 	serverMgr.Register(&LoginServer{})
 }
 
+// LoginServer 登录服务
 type LoginServer struct {
 	out        network.NetServer
 	randSource *rand.Rand
 	cfg        *config.ServerConfig
 }
 
+// Init 初始化
 func (login *LoginServer) Init(cfg *config.ServerConfig) {
 	login.out = network.NewNetWork(cfg.Protocol)
 	login.out.SetConnAcceptor(login)
@@ -40,13 +42,18 @@ func (login *LoginServer) Init(cfg *config.ServerConfig) {
 	login.out.Init(addr, "", "", false)
 	login.cfg = cfg
 }
+
+// GetSID 获取服务id
 func (login *LoginServer) GetSID() uint64 {
 	return login.cfg.ID
 }
+
+// GetKind 获取服务类型
 func (login *LoginServer) GetKind() uint32 {
 	return config.ServerKindLogin
 }
 
+// Run 主逻辑
 func (login *LoginServer) Run() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
@@ -66,6 +73,8 @@ func (login *LoginServer) Run() {
 	login.out.Run()
 	<-c
 }
+
+// Accept 链接接收函数
 func (login *LoginServer) Accept(conn netConn.Conn, defaultId uint64) network.ConnRunner {
 	for {
 		data, err := conn.ReadMessage()
@@ -97,13 +106,14 @@ func (login *LoginServer) Accept(conn netConn.Conn, defaultId uint64) network.Co
 			seelog.Error("unknown cmd ", p.GetCmd())
 		}
 	}
-	return login
 }
 
+// Start 接口要求
 func (login *LoginServer) Start() {
 
 }
 
+// login 登录函数
 func (login *LoginServer) login(param []byte) (r packet.IPacket) {
 	r = &packet.Packet{}
 	r.SetCmd(6000)
@@ -180,6 +190,7 @@ func (login *LoginServer) nodeUpdate() (output *discovery.ServiceState, status s
 	return
 }
 
+// ServerInfo 区服信息
 type ServerInfo struct {
 	Id      uint64 `json:"id"`
 	Default int    `json:"default"`
@@ -188,16 +199,20 @@ type ServerInfo struct {
 	IsNew   int    `json:"is_new"`
 	Login   string `json:"login"`
 }
+
+// ServerListRet 区服列表
 type ServerListRet struct {
 	ServerList []*ServerInfo `json:"server_list"`
 	Recent     []uint64      `json:"recent"`
 }
 
+// ServerListReq 区服列表请求
 type ServerListReq struct {
 	Account string `json:"account"`
 	Channel string `json:"channel"`
 }
 
+// GetServerList 获取区服列表
 func (login *LoginServer) GetServerList(param []byte) (r *packet.Packet) {
 	r = &packet.Packet{}
 	r.SetCmd(5100)

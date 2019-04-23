@@ -2,12 +2,11 @@ package logger
 
 import (
 	"bytes"
-	"encoding/json"
-	"net/http"
-	"game/base/safelist"
-
 	"crypto/tls"
+	"encoding/json"
+	"game/base/safelist"
 	"net"
+	"net/http"
 
 	"github.com/cihub/seelog"
 	"golang.org/x/net/http2"
@@ -23,7 +22,7 @@ func NewLogger() *RemoteLog {
 	}
 }
 
-//Logger logger结构，http发送日志数据到日志服务
+//RemoteLog logger结构，http发送日志数据到日志服务
 type RemoteLog struct {
 	remoteURL string             //日志服务地址
 	list      *safelist.SafeList //日志数据缓存队列 TODO 性能需要检验
@@ -31,7 +30,7 @@ type RemoteLog struct {
 	hc        *http.Client       //缓存http2 client
 }
 
-//Push 对外接口，发送日志
+//PushRemoteLog 对外接口，发送日志
 func (l *RemoteLog) PushRemoteLog(data interface{}) {
 	if !l.r {
 		return
@@ -44,7 +43,7 @@ func (l *RemoteLog) PushRemoteLog(data interface{}) {
 	l.list.Put(s)
 }
 
-//Init 初始化日志对象
+//SetRemoteLogUrl 初始化日志对象
 func (l *RemoteLog) SetRemoteLogUrl(url string) *RemoteLog {
 	if url == "" {
 		return l

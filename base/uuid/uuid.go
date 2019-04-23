@@ -1,7 +1,6 @@
 package uuid
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -56,7 +55,7 @@ func newIdWorker() *idWorker {
 func (id *idWorker) nextid() (int64, error) {
 	timestamp := timeGen()
 	if timestamp < id.lastTimestamp {
-		return 0, errors.New(fmt.Sprintf("Clock moved backwards.  Refusing to generate id for %d milliseconds", id.lastTimestamp-timestamp))
+		return 0, fmt.Errorf("Clock moved backwards.  Refusing to generate id for %d milliseconds", id.lastTimestamp-timestamp)
 	}
 	if id.lastTimestamp == timestamp {
 		id.sequence = (id.sequence + 1) & sequenceMask
@@ -95,8 +94,7 @@ func NextId() (int64, error) {
 // NextIds get snowflake ids.
 func NextIds(num int) ([]int64, error) {
 	if num > maxNextIdsNum || num < 0 {
-		fmt.Sprintf("NextIds num can't be greater than %d or less than 0", maxNextIdsNum)
-		return nil, errors.New(fmt.Sprintf("NextIds num: %d error", num))
+		return nil, fmt.Errorf("NextIds num: %d error", num)
 	}
 	ids := make([]int64, num)
 	getUUID().mutex.Lock()

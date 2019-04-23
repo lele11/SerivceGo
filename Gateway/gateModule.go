@@ -120,7 +120,7 @@ func (gate *GatewayServer) HandlerClientConnect(packet packet.IPacket) {
 	}
 }
 
-var sessKeyError = errors.New("Session Key Error ")
+var errSessionKey = errors.New("Session Key Error ")
 
 // HandlerSessionVerify 远端接入验证函数 主要处理客户端接入
 func (gate *GatewayServer) HandlerSessionVerify(pack packet.IPacket) (p packet.IPacket) {
@@ -141,7 +141,7 @@ func (gate *GatewayServer) HandlerSessionVerify(pack packet.IPacket) (p packet.I
 	sessionKey, sessionExpire, sid = db.GetSessionInfo(msg.Uid)
 	if sessionExpire < time.Now().Unix() || sessionKey != msg.Sessionkey {
 		ret.Result = 1
-		p.SetError(sessKeyError)
+		p.SetError(errSessionKey)
 		goto END
 	}
 	gate.verifyDone(msg.Uid, sid)
