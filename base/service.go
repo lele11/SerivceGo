@@ -188,7 +188,7 @@ func (service *Service) SendMsg(id uint64, cmd uint16, msg IMsg) {
 func (service *Service) SendDirect(p packet.IPacket) {
 	s := service.sessionMgr.GetSessByID(p.GetTarget())
 	if s != nil {
-		s.SendPacket(p.PackData())
+		s.SendPacket(p)
 	}
 }
 

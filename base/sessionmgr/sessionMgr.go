@@ -129,7 +129,7 @@ func (sessMgr *SessionMgr) verifySession(sess *Session, p packet.IPacket) bool {
 		} else {
 			sess.SetID(p.GetTarget())
 			ret = true
-			sess.SendPacket(p.PackData())
+			sess.SendPacket(p)
 		}
 	}
 	// 验证过后，需要清理挂起
@@ -178,7 +178,7 @@ func (sessMgr *SessionMgr) doSend() {
 			}
 			p := info.(packet.IPacket)
 			if sess := sessMgr.GetSessByID(p.GetTarget()); sess != nil {
-				sess.SendPacket(p.PackData())
+				sess.SendPacket(p)
 			} else {
 				log.Errorf("Not Found Target %d cmd %d ", p.GetTarget(), p.GetCmd())
 			}

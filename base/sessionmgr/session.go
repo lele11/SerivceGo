@@ -43,11 +43,11 @@ func (session *Session) Start() {
 }
 
 // SendPacket 发送数据
-func (session *Session) SendPacket(data []byte) {
+func (session *Session) SendPacket(pack packet.IPacket) {
 	if session.isClosed {
 		return
 	}
-	session.sendBuffer.Put(data)
+	session.sendBuffer.Put(pack.PackData())
 }
 func (session *Session) clearHeartBeat() {
 	session.conn.SetReadDeadline(time.Time{})
@@ -149,17 +149,10 @@ func (session *Session) Close(normal bool) {
 	session.mgr.removeSession(session.GetID())
 	go func() {
 		//等待消息发送结束 关闭
-		times := 0
-		for {
-			times++
-			if session.sendBuffer.IsEmpty() && times > 100 {
-				session.closeChan <- true
-				close(session.closeChan)
-				session.conn.Destroy()
-				break
-			}
-			time.Sleep(10 * time.Millisecond)
-		}
+		time.Sleep(time.Second)
+		session.closeChan <- true
+		close(session.closeChan)
+		session.conn.Destroy()
 		seelog.Infof("Session Close %d %s %t", session.GetID(), session.RemoteAddr(), normal)
 	}()
 }
