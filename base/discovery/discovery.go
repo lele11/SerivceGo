@@ -1,6 +1,7 @@
 package discovery
 
 import (
+	"game/base/util"
 	"time"
 )
 
@@ -57,6 +58,11 @@ func GetServiceMiniLoad(serviceName string, flag string) *ServiceDesc {
 // GetServiceOne 根据标记随机获取一个服务
 func GetServiceOne(serviceName string, flag string) *ServiceDesc {
 	return getServicePoolMgr().GetService(serviceName, GetServiceTypeRandom, flag)
+}
+
+// CheckService 检查服务是否存在
+func CheckService(serviceName string, serviceID uint64) bool {
+	return nil == getServicePoolMgr().GetService(serviceName, util.Uint64ToString(serviceID), "")
 }
 
 // DeregisterService 注销服务

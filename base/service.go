@@ -8,7 +8,7 @@ import (
 	"game/base/network"
 	"game/base/packet"
 	"game/base/proto"
-	"game/base/sessionMgr"
+	"game/base/sessionmgr"
 	"game/base/util"
 	"game/config"
 	"os"
@@ -112,7 +112,6 @@ func (service *Service) Close() {
 // Run 逻辑入口
 func (service *Service) Run() {
 	service.NetServer.Run()
-	service.sessionMgr.Run()
 	service.RemoteLog.Run()
 	service.register()
 	seelog.Infof("Service Start Node %d Addr %s port %d", service.id, service.addr, service.port)

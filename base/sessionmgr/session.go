@@ -152,6 +152,7 @@ func (session *Session) Close(normal bool) {
 		time.Sleep(time.Second)
 		session.closeChan <- true
 		close(session.closeChan)
+		session.sendBuffer.Clear()
 		session.conn.Destroy()
 		seelog.Infof("Session Close %d %s %t", session.GetID(), session.RemoteAddr(), normal)
 	}()

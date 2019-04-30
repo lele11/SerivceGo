@@ -64,17 +64,17 @@ func RemoteServerWorkerNum(i int) {
 	remoteLog.workerNum = i
 }
 
-// NewRemoteServer 初始，设定工作协程数量，日志存储地址，
-func NewRemoteServer(host string) error {
+// NewRemoteServer 初始，设定工作协程数量，日志存储地址，root:123456@tcp(127.0.0.1:3306)/log?charset=utf8
+func NewRemoteServer(host string) *RemoteLogServer {
 	db, e := sql.Open("mysql", host)
 	if e != nil {
 		seelog.Error("Init Mysql Error ", e)
-		return e
+		return nil
 	}
 	e = db.Ping()
 	if e != nil {
 		seelog.Error("Mysql Init Error ", e)
-		return e
+		return nil
 	}
 	workerPool := &RemoteLogServer{
 		db:          db,
@@ -84,7 +84,7 @@ func NewRemoteServer(host string) error {
 	}
 
 	remoteLog = workerPool
-	return nil
+	return remoteLog
 }
 
 // RemoteLogServer 日志处理服务
@@ -173,6 +173,7 @@ func (server *RemoteLogServer) Close() {
 		w.Close(ww)
 	}
 	ww.Wait()
+	server.db.Close()
 }
 
 // Recycle 回收
@@ -255,14 +256,12 @@ func (worker *RemoteLogWorker) do() {
 				if worker.stmt != nil {
 					worker.stmt.Close()
 					worker.stmt = nil
-				} else {
-					seelog.Error("Do Stmt Close Error ")
 				}
 			}
 		case <-ticker.C:
 			if worker.close && len(worker.data) == 0 {
-				worker.ww.Done()
 				worker.stmt.Close()
+				worker.ww.Done()
 				return
 			}
 		}

@@ -1,15 +1,12 @@
 package sessionmgr
 
 import (
-	"game/base/network/netConn"
-	"game/base/proto"
-	"game/base/safelist"
-	"sync"
-
-	"game/base/packet"
-	"game/base/uuid"
-
 	"game/base/network"
+	"game/base/network/netConn"
+	"game/base/packet"
+	"game/base/proto"
+	"game/base/uuid"
+	"sync"
 
 	log "github.com/cihub/seelog"
 )
@@ -33,20 +30,18 @@ const HeartBeatCmd = 5999
 // NewSessionMgr 创建session管理器
 func NewSessionMgr() *SessionMgr {
 	return &SessionMgr{
-		sessionByID:    &sync.Map{},
+		sessionById:    &sync.Map{},
 		pendingSession: &sync.Map{},
-		sendBuffer:     safelist.NewSafeList(),
 	}
 }
 
 // SessionMgr 管理 Sess
 type SessionMgr struct {
 	IMsgReceiver
-	sessionByID    *sync.Map
+	sessionById    *sync.Map
 	pendingSession *sync.Map
 	verifyHandler  func(packet.IPacket) packet.IPacket
 	heartBeat      bool
-	sendBuffer     *safelist.SafeList
 }
 
 // SetVerifyHandler 设置session的验证函数
@@ -69,7 +64,7 @@ func (sessMgr *SessionMgr) CloseSession(id uint64, normal bool) {
 
 // GetSessByID 获取一个session
 func (sessMgr *SessionMgr) GetSessByID(id uint64) *Session {
-	if i, ok := sessMgr.sessionByID.Load(id); ok {
+	if i, ok := sessMgr.sessionById.Load(id); ok {
 		return i.(*Session)
 	}
 	return nil
@@ -77,18 +72,13 @@ func (sessMgr *SessionMgr) GetSessByID(id uint64) *Session {
 
 // IsSessionExist 检查session是否存在
 func (sessMgr *SessionMgr) IsSessionExist(id uint64) bool {
-	_, ok := sessMgr.sessionByID.Load(id)
+	_, ok := sessMgr.sessionById.Load(id)
 	return ok
-}
-
-// Run 开启执行任务，消息发送业务
-func (sessMgr *SessionMgr) Run() {
-	go sessMgr.doSend()
 }
 
 // Close 关闭，主要是关闭session
 func (sessMgr *SessionMgr) Close() {
-	sessMgr.sessionByID.Range(func(key, value interface{}) bool {
+	sessMgr.sessionById.Range(func(key, value interface{}) bool {
 		sess := value.(*Session)
 		sess.Close(true)
 		return true
@@ -136,14 +126,14 @@ func (sessMgr *SessionMgr) verifySession(sess *Session, p packet.IPacket) bool {
 	sessMgr.pendingSession.Delete(sess.GetID())
 	if ret {
 		// 通过的session 进入session保存
-		sessMgr.sessionByID.Store(sess.GetID(), sess)
+		sessMgr.sessionById.Store(sess.GetID(), sess)
 	}
 	return ret
 }
 
 // removeSession 移除session
 func (sessMgr *SessionMgr) removeSession(id uint64) {
-	sessMgr.sessionByID.Delete(id)
+	sessMgr.sessionById.Delete(id)
 }
 
 // Accept 实现 network 中的 connectAcceptor 接口，基于连接创建session
@@ -158,7 +148,7 @@ func (sessMgr *SessionMgr) Accept(conn netconn.Conn, id uint64) network.ConnRunn
 		sess.isVerify = true
 		sess.clearHeartBeat()
 		sess.kind = innerMsg.ConnectType_Server
-		sessMgr.sessionByID.Store(sess.GetID(), sess)
+		sessMgr.sessionById.Store(sess.GetID(), sess)
 	}
 
 	return sess
@@ -166,22 +156,9 @@ func (sessMgr *SessionMgr) Accept(conn netconn.Conn, id uint64) network.ConnRunn
 
 // Send 接收来自外部的消息
 func (sessMgr *SessionMgr) Send(p packet.IPacket) {
-	sessMgr.sendBuffer.Put(p)
-}
-func (sessMgr *SessionMgr) doSend() {
-	for {
-		<-sessMgr.sendBuffer.C
-		for {
-			info, err := sessMgr.sendBuffer.Pop()
-			if err != nil {
-				break
-			}
-			p := info.(packet.IPacket)
-			if sess := sessMgr.GetSessByID(p.GetTarget()); sess != nil {
-				sess.SendPacket(p)
-			} else {
-				log.Errorf("Not Found Target %d cmd %d ", p.GetTarget(), p.GetCmd())
-			}
-		}
+	if sess := sessMgr.GetSessByID(p.GetTarget()); sess != nil {
+		sess.SendPacket(p)
+	} else {
+		log.Errorf("Not Found Target %d cmd %d ", p.GetTarget(), p.GetCmd())
 	}
 }

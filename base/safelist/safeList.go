@@ -106,3 +106,10 @@ func (sl *SafeList) IsEmpty() bool {
 
 	return false
 }
+
+// Clear 清空
+func (sl *SafeList) Clear() {
+	node := unsafe.Pointer(newNode(nil))
+	sl.head = node
+	sl.tail = node
+}
